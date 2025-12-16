@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд | Воздушный интерфейс</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Подключаем Google Fonts для современного шрифта -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Подключаем Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Анимированные облака для фона */
+        .clouds-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 100px;
+            filter: blur(20px);
+            animation: cloudFloat 80s infinite linear;
+        }
+        
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+        }
+        
+        @keyframes cloudFloat {
+            0% {
+                transform: translateX(-20vw);
+            }
+            100% {
+                transform: translateX(120vw);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ВИДЕО-ФОН С НЕБОМ -->
+    <div class="video-background">
+        <video autoplay muted loop playsinline id="bg-video">
+            <!-- Красивое видео с облаками и небом -->
+            <source src="0_Sky_Clouds_3840x2160.mp4" type="video/mp4">
+            <source src="0_Sky_Clouds_3840x2160.mp4" type="video/mp4">
+        </video>
+        <!-- Светлая подложка для лучшей читаемости текста -->
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Анимированные облака поверх видео -->
+    <div class="clouds-container" id="clouds"></div>
+
+    <div class="container">
+        <header>
+            <h1>☁️ Мой дашборд</h1>
+            <div class="controls">
+                <button id="add-widget-btn">
+                    <i data-lucide="plus" style="margin-right: 8px;"></i>
+                    Добавить виджет
+                </button>
+                <button id="export-btn">
+                    <i data-lucide="download" style="margin-right: 8px;"></i>
+                    Экспорт
+                </button>
+                <button id="import-btn">
+                    <i data-lucide="upload" style="margin-right: 8px;"></i>
+                    Импорт
+                </button>
+            </div>
+        </header>
+
+        <div class="widget-selector">
+            <h2>✨ Доступные виджеты</h2>
+            <div class="available-widgets">
+                <div class="available-widget" data-type="weather">
+                    <i data-lucide="sun" style="margin-right: 10px;"></i>
+                    Погода
+                </div>
+                <div class="available-widget" data-type="currency">
+                    <i data-lucide="dollar-sign" style="margin-right: 10px;"></i>
+                    Курсы валют
+                </div>
+                <div class="available-widget" data-type="quote">
+                    <i data-lucide="quote" style="margin-right: 10px;"></i>
+                    Случайная цитата
+                </div>
+                <div class="available-widget" data-type="timer">
+                    <i data-lucide="timer" style="margin-right: 10px;"></i>
+                    Таймер
+                </div>
+                <div class="available-widget" data-type="notes">
+                    <i data-lucide="sticky-note" style="margin-right: 10px;"></i>
+                    Заметки
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard" id="dashboard">
+            <!-- Виджеты будут добавляться сюда -->
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay"></div>
+
+<!-- Модальное окно настроек погоды -->
+<div class="settings-modal" id="weather-settings-modal">
+    <div class="settings-modal-content">
+        <div class="settings-modal-header">
+            <h3><i data-lucide="cloud"></i> Настройки погоды</h3>
+            <button class="settings-close-modal">&times;</button>
+        </div>
+        <div class="settings-modal-body">
+            <div class="settings-form-group">
+                <label for="weather-city-input">
+                    <i data-lucide="map-pin"></i> Город
+                </label>
+                <input type="text" 
+                       id="weather-city-input" 
+                       class="settings-input" 
+                       placeholder="Введите город"
+                       value="Санкт-Петербург">
+            </div>
+        </div>
+        <div class="settings-modal-footer">
+            <button class="settings-cancel-btn">
+                <i data-lucide="x"></i> Отмена
+            </button>
+            <button class="settings-save-btn" id="save-weather-settings">
+                <i data-lucide="check"></i> Сохранить
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно настроек валют -->
+<div class="settings-modal" id="currency-settings-modal">
+    <div class="settings-modal-content">
+        <div class="settings-modal-header">
+            <h3><i data-lucide="dollar-sign"></i> Настройки валют</h3>
+            <button class="settings-close-modal">&times;</button>
+        </div>
+        <div class="settings-modal-body">
+            <div class="settings-form-group">
+                <label for="currency-select">
+                    <i data-lucide="list"></i> Выберите валюты для отображения
+                </label>
+                <select multiple id="currency-select" class="settings-select" size="7">
+                    <option value="USD">USD — Доллар США</option>
+                    <option value="EUR">EUR — Евро</option>
+                    <option value="GBP">GBP — Британский фунт</option>
+                    <option value="CNY">CNY — Китайский юань</option>
+                    <option value="JPY">JPY — Японская иена</option>
+                    <option value="TRY">TRY — Турецкая лира</option>
+                    <option value="CHF">CHF — Швейцарский франк</option>
+                </select>
+                <div class="settings-hint">Удерживайте Ctrl для выбора нескольких валют</div>
+            </div>
+        </div>
+        <div class="settings-modal-footer">
+            <button class="settings-cancel-btn">
+                <i data-lucide="x"></i> Отмена
+            </button>
+            <button class="settings-save-btn" id="save-currency-settings">
+                <i data-lucide="check"></i> Сохранить
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно настроек таймера -->
+<div class="settings-modal" id="timer-settings-modal">
+    <div class="settings-modal-content">
+        <div class="settings-modal-header">
+            <h3><i data-lucide="timer"></i> Настройки таймера</h3>
+            <button class="settings-close-modal">&times;</button>
+        </div>
+        <div class="settings-modal-body">
+            <div class="settings-form-group">
+                <label for="work-time-input">
+                    <i data-lucide="briefcase"></i> Рабочее время (минут)
+                </label>
+                <input type="number" 
+                       id="work-time-input" 
+                       class="settings-input" 
+                       min="1" 
+                       max="180" 
+                       value="25">
+            </div>
+            <div class="settings-form-group">
+                <label for="break-time-input">
+                    <i data-lucide="coffee"></i> Перерыв (минут)
+                </label>
+                <input type="number" 
+                       id="break-time-input" 
+                       class="settings-input" 
+                       min="1" 
+                       max="60" 
+                       value="5">
+            </div>
+        </div>
+        <div class="settings-modal-footer">
+            <button class="settings-cancel-btn">
+                <i data-lucide="x"></i> Отмена
+            </button>
+            <button class="settings-save-btn" id="save-timer-settings">
+                <i data-lucide="check"></i> Сохранить
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно настроек заметок -->
+<div class="settings-modal" id="notes-settings-modal">
+    <div class="settings-modal-content">
+        <div class="settings-modal-header">
+            <h3><i data-lucide="sticky-note"></i> Настройки заметок</h3>
+            <button class="settings-close-modal">&times;</button>
+        </div>
+        <div class="settings-modal-body">
+            <div class="settings-form-group">
+                <label for="notes-title-input">
+                    <i data-lucide="edit"></i> Название виджета
+                </label>
+                <input type="text" 
+                       id="notes-title-input" 
+                       class="settings-input" 
+                       placeholder="Введите название"
+                       value="Заметки">
+            </div>
+            <div class="settings-hint">
+                <i data-lucide="info"></i> Заметки автоматически сохраняются локально
+            </div>
+        </div>
+        <div class="settings-modal-footer">
+            <button class="settings-cancel-btn">
+                <i data-lucide="x"></i> Отмена
+            </button>
+            <button class="settings-save-btn" id="save-notes-settings">
+                <i data-lucide="check"></i> Сохранить
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно настроек цитат -->
+<div class="settings-modal" id="quote-settings-modal">
+    <div class="settings-modal-content">
+        <div class="settings-modal-header">
+            <h3><i data-lucide="quote"></i> Настройки цитат</h3>
+            <button class="settings-close-modal">&times;</button>
+        </div>
+        <div class="settings-modal-body">
+            <div class="settings-form-group">
+                <label for="quote-title-input">
+                    <i data-lucide="edit"></i> Название виджета
+                </label>
+                <input type="text" 
+                       id="quote-title-input" 
+                       class="settings-input" 
+                       placeholder="Введите название"
+                       value="Случайная цитата">
+            </div>
+            <div class="settings-hint">
+                <i data-lucide="refresh-cw"></i> Для обновления цитаты нажмите кнопку в виджете
+            </div>
+        </div>
+        <div class="settings-modal-footer">
+            <button class="settings-cancel-btn">
+                <i data-lucide="x"></i> Отмена
+            </button>
+            <button class="settings-save-btn" id="save-quote-settings">
+                <i data-lucide="check"></i> Сохранить
+            </button>
+        </div>
+    </div>
+</div>
+</html>
+
+    <script src="script.js"></script>
+    
+    <script>
+        // Создаем анимированные облака
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            // Создание облаков
+            const cloudsContainer = document.getElementById('clouds');
+            const cloudCount = 8;
+            
+            for (let i = 0; i < cloudCount; i++) {
+                const cloud = document.createElement('div');
+                cloud.classList.add('cloud');
+                
+                // Случайные параметры для облаков
+                const size = Math.random() * 300 + 150;
+                const top = Math.random() * 70 + 5;
+                const delay = Math.random() * 30;
+                const duration = Math.random() * 40 + 60;
+                const opacity = Math.random() * 0.1 + 0.08;
+                const blur = Math.random() * 10 + 15;
+                
+                cloud.style.width = `${size}px`;
+                cloud.style.height = `${size * 0.4}px`;
+                cloud.style.top = `${top}%`;
+                cloud.style.left = `-${size}px`;
+                cloud.style.animationDelay = `${delay}s`;
+                cloud.style.animationDuration = `${duration}s`;
+                cloud.style.opacity = opacity;
+                cloud.style.filter = `blur(${blur}px)`;
+                
+                // Добавляем дополнительные части облака
+                const beforeSize = size * 0.6;
+                cloud.style.cssText += `
+                    --cloud-color: rgba(255, 255, 255, ${opacity});
+                    --cloud-size: ${size}px;
+                `;
+                
+                cloudsContainer.appendChild(cloud);
+            }
+            
+            // Обработчик ошибки видео
+            const video = document.getElementById('bg-video');
+            video.addEventListener('error', () => {
+                console.log('Видео не загрузилось, используем фолбэк');
+                // Используем фоновый градиент неба
+                document.body.style.background = 'linear-gradient(135deg, #87CEEB 0%, #E0F7FF 50%, #B3E0FF 100%)';
+                document.body.style.backgroundSize = '400% 400%';
+                document.body.style.animation = 'gradientBG 15s ease infinite';
+            });
+        });
+        
+    </script>
+</body>
+</html>
